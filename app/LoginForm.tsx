@@ -1,4 +1,29 @@
 'use client'
 import { FormEvent, useState } from 'react'
 
-export default function LoginForm() { const [message, setMessage] = useState(''); async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setMessage('Signing in…'); const response = await fetch('/api/auth/email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) }); const data = await response.json().catch(() => ({})); if (response.ok) window.location.reload(); else setMessage(data.error || 'Sign-in failed.') } return <><form className="mt-5 grid gap-3" onSubmit={submit}><input name="email" required type="email" placeholder="Email address" className="rounded-lg border p-3" /><input name="password" required type="password" placeholder="Password" className="rounded-lg border p-3" /><button className="rounded-lg border border-navy px-5 py-3 font-semibold text-navy">Continue with email</button></form><a className="mt-3 inline-block text-sm font-semibold text-primary hover:underline" href="/forgot-password">Forgot password?</a>{message && <p className="mt-3 text-sm text-slate-600">{message}</p>}</> }
+export default function LoginForm() {
+  const [message, setMessage] = useState('')
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setMessage('Signing in…')
+
+    try {
+      const response = await fetch('/api/auth/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (response.ok) {
+        window.location.assign('/')
+        return
+      }
+      setMessage(data.error || 'Sign-in failed. Please try again.')
+    } catch {
+      setMessage('The sign-in service could not be reached. Please try again.')
+    }
+  }
+
+  return <><form className="mt-5 grid gap-3" onSubmit={submit}><input name="email" required type="email" placeholder="Email address" className="rounded-lg border p-3" /><input name="password" required type="password" placeholder="Password" className="rounded-lg border p-3" /><button className="rounded-lg border border-navy px-5 py-3 font-semibold text-navy">Continue with email</button></form><a className="mt-3 inline-block text-sm font-semibold text-primary hover:underline" href="/forgot-password">Forgot password?</a>{message && <p className="mt-3 text-sm text-slate-600">{message}</p>}</>
+}
