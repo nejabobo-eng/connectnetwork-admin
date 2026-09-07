@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     const user = data.user
     if (error || !user?.email || user.email.toLowerCase() !== (process.env.ADMIN_EMAIL || 'nejabobo@gmail.com').toLowerCase()) throw new Error('Unauthorised user')
-    response.cookies.set(cookieName, createAdminSession(user.email), { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 12 })
+    response.cookies.set(cookieName, createAdminSession(user.email), { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 12 })
     return response
   } catch (error) {
     const failure = new URL('/?error=signin', process.env.NEXT_PUBLIC_APP_URL || request.url)

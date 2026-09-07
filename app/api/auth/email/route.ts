@@ -15,6 +15,6 @@ export async function POST(request: Request) {
   if (!response.ok) return NextResponse.json({ error: typeof payload.msg === 'string' ? payload.msg : 'Email or password is incorrect.' }, { status: 401 })
   if (payload.user?.email?.toLowerCase() !== email) return NextResponse.json({ error: 'This account is not authorised for the dashboard.' }, { status: 403 })
   const result = NextResponse.json({ ok: true })
-  result.cookies.set(cookieName, createAdminSession(email), { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 12 })
+  result.cookies.set(cookieName, createAdminSession(email), { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 12 })
   return result
 }
