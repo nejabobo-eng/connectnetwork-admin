@@ -7,9 +7,10 @@ function matches(value: string, expected: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const setupSecret = process.env.ADMIN_SETUP_SECRET
-  const providedSecret = request.nextUrl.searchParams.get('key')
-  if (!setupSecret || !providedSecret || !matches(providedSecret, setupSecret)) return NextResponse.json({ error: 'Setup access is not available.' }, { status: 401 })
+  const setupSecret = process.env.ADMIN_SETUP_SECRET?.trim()
+  const providedSecret = request.nextUrl.searchParams.get('key')?.trim()
+  if (!setupSecret) return NextResponse.json({ error: 'Setup secret is not configured in this deployment.' }, { status: 503 })
+  if (!providedSecret || !matches(providedSecret, setupSecret)) return NextResponse.json({ error: 'The setup link is not valid.' }, { status: 401 })
 
   const email = (process.env.ADMIN_EMAIL || 'nejabobo@gmail.com').toLowerCase()
   const response = NextResponse.redirect(new URL('/', request.url))
