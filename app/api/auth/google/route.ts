@@ -1,14 +1,20 @@
-import { createHash, randomBytes } from 'crypto'
-import { NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const url = process.env.SUPABASE_URL
   const key = process.env.SUPABASE_ANON_KEY
   if (!url || !key) return NextResponse.json({ error: 'Google sign-in is not configured.' }, { status: 503 })
-  const verifier = randomBytes(32).toString('base64url')
-  const challenge = createHash('sha256').update(verifier).digest('base64url')
   const callback = new URL('/api/auth/google/callback', process.env.NEXT_PUBLIC_APP_URL || request.url).toString()
-  const response = NextResponse.redirect(`${url}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(callback)}&code_challenge=${challenge}&code_challenge_method=s256`)
-  response.cookies.set('connectnetwork_admin_pkce_verifier', verifier, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 600 })
+  const response = new NextResponse(null, { status: 302 })
+  const supabase = createServerClient(url, key, {
+    cookies: {
+      getAll: () => request.cookies.getAll(),
+      setAll: values => values.forEach(({ name, value, options }) => response.cookies.set(name, value, options)),
+    },
+  })
+  const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: callback } })
+  if (error || !data.url) return NextResponse.json({ error: error?.message || 'Google sign-in could not be started.' }, { status: 500 })
+  response.headers.set('Location', data.url)
   return response
 }
