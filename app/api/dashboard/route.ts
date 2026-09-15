@@ -1,9 +1,11 @@
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { cookieName, isValidAdminSession } from '@/lib/admin-auth'
+import { cookieName, isLocalAdminBypassEnabled, isValidAdminSession } from '@/lib/admin-auth'
 import { controlRequest } from '@/lib/control-client'
 
-function authorised() { return isValidAdminSession(cookies().get(cookieName)?.value) }
+function authorised() {
+  return isLocalAdminBypassEnabled() || isValidAdminSession(cookies().get(cookieName)?.value)
+}
 
 export async function GET() {
   if (!authorised()) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })

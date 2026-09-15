@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { cookieName, createAdminSession } from '@/lib/admin-auth'
+import { cookieName, createAdminSession, isAuthorisedAdminEmail } from '@/lib/admin-auth'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const tokens = await tokenResponse.json()
     const userResponse = await fetch(`${url}/auth/v1/user`, { headers: { apikey: key, Authorization: `Bearer ${tokens.access_token}` }, cache: 'no-store' })
     const user = await userResponse.json()
-    if (!userResponse.ok || !user.email || user.email.toLowerCase() !== (process.env.ADMIN_EMAIL || 'nejabobo@gmail.com').toLowerCase()) throw new Error('This Google account is not authorised')
+    if (!userResponse.ok || !isAuthorisedAdminEmail(user.email)) throw new Error('This Google account is not authorised')
     response.cookies.set(cookieName, createAdminSession(user.email), { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 12 })
     response.cookies.delete('connectnetwork_admin_pkce_verifier')
     return response

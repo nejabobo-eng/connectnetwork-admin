@@ -8,7 +8,7 @@ export async function GET() {
       supabaseKey: Boolean(process.env.SUPABASE_ANON_KEY),
       adminEmail: Boolean(process.env.ADMIN_EMAIL),
       sessionSecret: Boolean(process.env.ADMIN_SESSION_SECRET),
-      setupSecret: Boolean(process.env.ADMIN_SETUP_SECRET),
+      localBypassEnabled: process.env.NODE_ENV === 'development' && process.env.ALLOW_LOCAL_ADMIN_BYPASS === 'true',
     },
     environment: process.env.VERCEL_ENV || process.env.NODE_ENV,
   })
