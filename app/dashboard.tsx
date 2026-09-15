@@ -4,6 +4,14 @@ import { FormEvent, useEffect, useState } from 'react'
 
 const manualCategories = ['Electronics', 'Home & Living', 'Fashion', 'Beauty & Personal Care', 'Health & Wellness', 'Baby & Kids', 'Sports & Outdoors', 'Automotive', 'Tools & Hardware', 'Office & Business', 'Food & Beverage', 'Other']
 
+const quickResearchBrief = `Research a real product from a legitimate supplier or retailer. The product must have a verifiable supplier price. Never recommend a product if you cannot determine its supplier cost.
+
+Prioritize products that:
+
+Have clear current demand.
+Offer good value to customers.
+Can reasonably be resold in South Africa.`
+
 function normalizedManualCategory(value: string) {
   if (value === 'Home & living') return 'Home & Living'
   if (value === 'Beauty & care') return 'Beauty & Personal Care'
@@ -214,6 +222,13 @@ export default function Dashboard() {
     await runAutomation()
   }
 
+  async function queueQuickResearch() {
+    setMessage('Queuing product research…')
+    const { response, result } = await control({ action: 'queue-discovery', demandSignal: quickResearchBrief })
+    if (!response.ok) { setMessage(result.error || 'Could not queue product research.'); return }
+    await runAutomation()
+  }
+
   async function runAutomation() {
     setMessage('Running automation…')
     for (let retry = 0; retry < 3; retry += 1) {
@@ -323,7 +338,7 @@ export default function Dashboard() {
     {message && <p className="mt-5 rounded-lg border border-slate-300 bg-slate-50 p-4 text-sm" role="status">{message}</p>}
     <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cards.map(([label, value]) => <article className="rounded-xl border bg-white p-5 shadow-sm" key={String(label)}><p className="text-sm text-slate-600">{label}</p><p className="mt-2 text-3xl font-bold">{value}</p></article>)}</section>
     <section className="mt-8 grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-      <form onSubmit={queueDiscovery} className="rounded-xl border bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">Research a demand signal</h2><p className="mt-2 text-sm text-slate-600">Ask the OpenAI worker to prepare an opportunity for your review.</p><textarea required minLength={10} value={demandSignal} onChange={event => setDemandSignal(event.target.value)} className="mt-5 min-h-32 w-full rounded-lg border p-3" placeholder="Example: affordable backup power for small South African businesses" /><button className="mt-4 rounded-lg bg-navy px-4 py-2 font-semibold text-white">Queue research</button></form>
+      <div className="grid gap-4"><section className="rounded-xl border bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">Quick product research</h2><p className="mt-2 text-sm text-slate-600">Find a real product with a verified supplier cost, then prepare it for your review.</p><button onClick={queueQuickResearch} className="mt-4 rounded-lg bg-green px-4 py-2 text-sm font-semibold text-white">Research product now</button></section><form onSubmit={queueDiscovery} className="rounded-xl border bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">Research a demand signal</h2><p className="mt-2 text-sm text-slate-600">Ask the OpenAI worker to prepare an opportunity for your review.</p><textarea required minLength={10} value={demandSignal} onChange={event => setDemandSignal(event.target.value)} className="mt-5 min-h-32 w-full rounded-lg border p-3" placeholder="Example: affordable backup power for small South African businesses" /><button className="mt-4 rounded-lg bg-navy px-4 py-2 font-semibold text-white">Queue research</button></form></div>
       <section><h2 className="text-xl font-bold">Ready for review</h2><div className="mt-4 grid gap-4">{data?.opportunities.map(item => {
         const details = listingDetails(item)
         const priceValid = Number.isFinite(Number(details.price)) && Number(details.price) > 0
