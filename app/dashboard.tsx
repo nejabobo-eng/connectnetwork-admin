@@ -182,6 +182,7 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [message, setMessage] = useState('')
   const [demandSignal, setDemandSignal] = useState('')
+  const [supplierUrl, setSupplierUrl] = useState('')
   const [listingDrafts, setListingDrafts] = useState<Record<string, ListingDraft>>({})
   const [fulfilmentDrafts, setFulfilmentDrafts] = useState<Record<string, FulfilmentDraft>>({})
   const [manualProduct, setManualProduct] = useState({ name: '', description: '', category: '', supplierName: '', supplierContact: '', supplierPhone: '', supplierUrl: '', supplierCost: '', shippingWeightGrams: '1000', shippingLengthCm: '30', shippingWidthCm: '20', shippingHeightCm: '10', bulkySurcharge: '0', deliveryOverride: '' })
@@ -223,6 +224,14 @@ export default function Dashboard() {
     await runAutomation()
   }
 
+  async function queueSupplierCrawl(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setMessage('Queuing supplier page crawl…')
+    const { response, result } = await control({ action: 'queue-crawl-supplier', sourceUrl: supplierUrl })
+    if (!response.ok) { setMessage(result.error || 'Could not queue supplier page crawl.'); return }
+    setSupplierUrl('')
+    await runAutomation()
+  }
   async function queueQuickResearch(category: string) {
     setMessage(`Queuing ${category} product research…`)
     const { response, result } = await control({ action: 'queue-discovery', demandSignal: `${quickResearchBrief}\n\nCategory: ${category}` })
@@ -339,7 +348,7 @@ export default function Dashboard() {
     {message && <p className="mt-5 rounded-lg border border-slate-300 bg-slate-50 p-4 text-sm" role="status">{message}</p>}
     <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{cards.map(([label, value]) => <article className="rounded-xl border bg-white p-5 shadow-sm" key={String(label)}><p className="text-sm text-slate-600">{label}</p><p className="mt-2 text-3xl font-bold">{value}</p></article>)}</section>
     <section className="mt-8 grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-      <div className="grid gap-4"><section className="rounded-xl border bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">Quick category research</h2><p className="mt-2 text-sm text-slate-600">Choose a category to find one real product with a verified supplier cost, then prepare it for your review.</p><div className="mt-4 flex flex-wrap gap-2">{quickResearchCategories.map(category => <button key={category} onClick={() => queueQuickResearch(category)} className="rounded-lg bg-green px-4 py-2 text-sm font-semibold text-white">Research {category}</button>)}</div></section><form onSubmit={queueDiscovery} className="rounded-xl border bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">Research a demand signal</h2><p className="mt-2 text-sm text-slate-600">Ask the OpenAI worker to prepare an opportunity for your review.</p><textarea required minLength={10} value={demandSignal} onChange={event => setDemandSignal(event.target.value)} className="mt-5 min-h-32 w-full rounded-lg border p-3" placeholder="Example: affordable backup power for small South African businesses" /><button className="mt-4 rounded-lg bg-navy px-4 py-2 font-semibold text-white">Queue research</button></form></div>
+      <div className="grid gap-4"><form onSubmit={queueSupplierCrawl} className="rounded-xl border bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">Crawl supplier product URL</h2><p className="mt-2 text-sm text-slate-600">Extract a real supplier product, verified ZAR price, images, and availability without using OpenAI.</p><input required type="url" value={supplierUrl} onChange={event => setSupplierUrl(event.target.value)} className="mt-4 w-full rounded-lg border p-3" placeholder="https://supplier.co.za/product/..." /><button className="mt-4 rounded-lg bg-navy px-4 py-2 font-semibold text-white">Crawl supplier URL</button></form><section className="rounded-xl border bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">Quick category research</h2><p className="mt-2 text-sm text-slate-600">Choose a category to find one real product with a verified supplier cost, then prepare it for your review.</p><div className="mt-4 flex flex-wrap gap-2">{quickResearchCategories.map(category => <button key={category} onClick={() => queueQuickResearch(category)} className="rounded-lg bg-green px-4 py-2 text-sm font-semibold text-white">Research {category}</button>)}</div></section><form onSubmit={queueDiscovery} className="rounded-xl border bg-white p-6 shadow-sm"><h2 className="text-xl font-bold">Research a demand signal</h2><p className="mt-2 text-sm text-slate-600">Ask the OpenAI worker to prepare an opportunity for your review.</p><textarea required minLength={10} value={demandSignal} onChange={event => setDemandSignal(event.target.value)} className="mt-5 min-h-32 w-full rounded-lg border p-3" placeholder="Example: affordable backup power for small South African businesses" /><button className="mt-4 rounded-lg bg-navy px-4 py-2 font-semibold text-white">Queue research</button></form></div>
       <section><h2 className="text-xl font-bold">Ready for review</h2><div className="mt-4 grid gap-4">{data?.opportunities.map(item => {
         const details = listingDetails(item)
         const priceValid = Number.isFinite(Number(details.price)) && Number(details.price) > 0
