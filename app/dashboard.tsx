@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react'
 
-const categories = ['Electronics', 'Home & Living', 'Fashion', 'Beauty & Personal Care', 'Health & Wellness', 'Baby & Kids', 'Sports & Outdoors', 'Automotive', 'Tools & Hardware', 'Office & Business', 'Food & Beverage', 'Other']
+const categories = ["Electronics","Computers & Laptops","Phones & Tablets","Computer & Mobile Accessories","Networking & Connectivity","TV & Audio","Gaming","Security & Smart Devices","Electronic Components","Chargers & Backup Power"]
 const lifecycleStatuses = ['active', 'paused', 'out_of_stock', 'archived'] as const
 
 type Supplier = { id?: string; business_name?: string; source_url?: string; website_url?: string }
@@ -17,7 +17,7 @@ function supplierFor(product: Product) {
 }
 
 function newProduct(): ManualProduct {
-  return { name: '', description: '', category: 'Other', supplierName: '', supplierContact: '', supplierPhone: '', sourceUrl: '', imageUrl: '', supplierCost: '', stockQuantity: '0', shippingWeightGrams: '1000', shippingLengthCm: '30', shippingWidthCm: '20', shippingHeightCm: '10', bulkySurcharge: '0', deliveryOverride: '' }
+  return { name: '', description: '', category: 'Electronics', supplierName: '', supplierContact: '', supplierPhone: '', sourceUrl: '', imageUrl: '', supplierCost: '', stockQuantity: '0', shippingWeightGrams: '1000', shippingLengthCm: '30', shippingWidthCm: '20', shippingHeightCm: '10', bulkySurcharge: '0', deliveryOverride: '' }
 }
 
 export default function Dashboard() {
@@ -46,7 +46,7 @@ export default function Dashboard() {
 
   function draftFor(item: Product): ProductDraft {
     const supplier = supplierFor(item)
-    return edits[item.id] || { name: item.name, description: item.description || '', category: item.category || 'Other', supplierName: supplier?.business_name || '', sourceUrl: supplier?.source_url || supplier?.website_url || '', imageUrl: item.image_url || '', supplierCost: item.supplier_cost_cents ? (item.supplier_cost_cents / 100).toFixed(2) : '', stockQuantity: String(item.stock_quantity ?? 0) }
+    return edits[item.id] || { name: item.name, description: item.description || '', category: item.category || 'Electronics', supplierName: supplier?.business_name || '', sourceUrl: supplier?.source_url || supplier?.website_url || '', imageUrl: item.image_url || '', supplierCost: item.supplier_cost_cents ? (item.supplier_cost_cents / 100).toFixed(2) : '', stockQuantity: String(item.stock_quantity ?? 0) }
   }
 
   function changeDraft(productId: string, changes: Partial<ProductDraft>) {
@@ -109,7 +109,7 @@ export default function Dashboard() {
     await load()
   }
 
-  const products = (data?.products || []).filter(item => item.name.toLowerCase().includes(search.toLowerCase()) && (category === 'All categories' || item.category === category) && (status === 'All statuses' || item.lifecycle_status === status))
+  const products = (data?.products || []).filter(item => categories.includes(item.category || '') && item.name.toLowerCase().includes(search.toLowerCase()) && (category === 'All categories' || item.category === category) && (status === 'All statuses' || item.lifecycle_status === status))
   const published = data?.products.filter(item => item.lifecycle_status === 'active').length || 0
 
   return <main className="mx-auto max-w-7xl px-5 py-10">
