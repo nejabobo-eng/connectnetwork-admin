@@ -47,7 +47,7 @@ export default function Dashboard() {
 
   async function control(payload: Record<string, unknown>) {
     const response = await fetch('/api/dashboard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-    return { response, result: await response.json().catch(() => ({})) as { error?: string; retailPriceCents?: number } }
+    return { response, result: await response.json().catch(() => ({})) as { error?: string; retailPriceCents?: number; matches?: unknown } }
   }
 
   async function reviewApplication(item: Application, decision: 'approved'|'rejected') {
